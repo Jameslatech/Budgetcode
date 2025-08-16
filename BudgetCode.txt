@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Overview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        th:hover {
+            background-color: #e8e8e8;
+        }
+        
+        input[type="text"] {
+            width: 80%;
+            box-sizing: border-box;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .total {
+            font-weight: bold;
+            background-color: #f8f8f8;
+        }
+        
+        .selected-total {
+            background-color: #e8f4fd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .summary {
+            background-color: #fff;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .summary h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        .positive {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        #filterInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .category-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 20px 0 10px 0;
+            border-radius: 5px;
+        }
+        
+        .add-btn {
+            margin: 10px 0;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Budget Overview</h1>
+
+<input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search for names...">
+
+<div class="category-header">
+    <h3>Income</h3>
+</div>
+<table id="incomeTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('incomeTable', 0)">Source</th>
+            <th onclick="sortTable('incomeTable', 1)">Planned Amount</th>
+            <th onclick="sortTable('incomeTable', 2)">Received Amount</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>James Paycheck 1</td><td><input type="text" value="3000.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli Paycheck 1</td><td><input type="text" value="10000.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>James Paycheck 2</td><td><input type="text" value="3000.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli Paycheck 2</td><td><input type="text" value="10000.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Income</td><td id="totalIncome">$26,000.00</td><td id="totalIncomeReceived">$0.00</td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Income: <span id="incomeSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('incomeTable', ['New Income Source', '0.00', '0.00'])">+ Add Income Item</button>
+
+<div class="category-header">
+    <h3>Housing Expenses</h3>
+</div>
+<table id="housingTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('housingTable', 0)">Expense</th>
+            <th onclick="sortTable('housingTable', 1)">Planned Amount</th>
+            <th onclick="sortTable('housingTable', 2)">Due Date</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Mortgage #1</td><td><input type="text" value="869.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Mortgage #2</td><td><input type="text" value="869.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Electric</td><td><input type="text" value="404.00" onchange="calculateAllSums()"></td><td>Aug 21st</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Internet</td><td><input type="text" value="80.00" onchange="calculateAllSums()"></td><td>Aug 7th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Gas</td><td><input type="text" value="72.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Water</td><td><input type="text" value="44.00" onchange="calculateAllSums()"></td><td>Aug 29th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Sirius Radio</td><td><input type="text" value="23.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Netflix</td><td><input type="text" value="16.00" onchange="calculateAllSums()"></td><td>Aug 22nd</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Apple Cloud/TV</td><td><input type="text" value="20.00" onchange="calculateAllSums()"></td><td>Aug 15th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Fitness App</td><td><input type="text" value="10.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Subscriptions</td><td><input type="text" value="65.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Housing</td><td id="totalHousing">$2,472.00</td><td></td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Housing: <span id="housingSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('housingTable', ['New Housing Expense', '0.00', 'Monthly'])">+ Add Housing Item</button>
+
+<div class="category-header">
+    <h3>Insurance & Tax</h3>
+</div>
+<table id="insuranceTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('insuranceTable', 0)">Expense</th>
+            <th onclick="sortTable('insuranceTable', 1)">Planned Amount</th>
+            <th onclick="sortTable('insuranceTable', 2)">Due Date</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>James Auto Insurance</td><td><input type="text" value="168.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli Auto Insurance</td><td><input type="text" value="140.00" onchange="calculateAllSums()"></td><td>Aug 23rd</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Insurance</td><td id="totalInsurance">$308.00</td><td></td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Insurance: <span id="insuranceSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('insuranceTable', ['New Insurance', '0.00', 'Monthly'])">+ Add Insurance Item</button>
+
+<div class="category-header">
+    <h3>Food</h3>
+</div>
+<table id="foodTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('foodTable', 0)">Expense</th>
+            <th onclick="sortTable('foodTable', 1)">Planned Amount</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Groceries</td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Restaurants</td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Dog Food</td><td><input type="text" value="185.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Food</td><td id="totalFood">$185.00</td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Food: <span id="foodSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('foodTable', ['New Food Expense', '0.00'])">+ Add Food Item</button>
+
+<div class="category-header">
+    <h3>Transportation</h3>
+</div>
+<table id="transportationTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('transportationTable', 0)">Expense</th>
+            <th onclick="sortTable('transportationTable', 1)">Planned Amount</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Gasoline</td><td><input type="text" value="500.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Transportation</td><td id="totalTransportation">$500.00</td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Transportation: <span id="transportationSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('transportationTable', ['New Transportation Expense', '0.00'])">+ Add Transportation Item</button>
+
+<div class="category-header">
+    <h3>Lifestyle</h3>
+</div>
+<table id="lifestyleTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('lifestyleTable', 0)">Expense</th>
+            <th onclick="sortTable('lifestyleTable', 1)">Planned Amount</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Hair Cut</td><td><input type="text" value="50.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Lifestyle</td><td id="totalLifestyle">$50.00</td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Lifestyle: <span id="lifestyleSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('lifestyleTable', ['New Lifestyle Expense', '0.00'])">+ Add Lifestyle Item</button>
+
+<div class="category-header">
+    <h3>Debt Payments</h3>
+</div>
+<table id="debtTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('debtTable', 0)">Debt</th>
+            <th onclick="sortTable('debtTable', 1)">Balance</th>
+            <th onclick="sortTable('debtTable', 2)">Monthly Payment</th>
+            <th onclick="sortTable('debtTable', 3)">Paid So Far</th>
+            <th onclick="sortTable('debtTable', 4)">Due Date</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Apple Computer</td><td>$1,728.34</td><td><input type="text" value="125.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli Chase</td><td>$8,067.46</td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>-</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>James Sallie Mae</td><td>$9,591.39</td><td><input type="text" value="109.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Aug 6th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>James MOHELA</td><td>$38,163.12</td><td><input type="text" value="395.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Aug 23rd</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Toyota Sequoia</td><td>$55,241.70</td><td><input type="text" value="940.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Aug 13th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli Land</td><td>$57,896.76</td><td><input type="text" value="526.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Chase</td><td>$61,088.99</td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>-</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Heloc</td><td>$76,081.37</td><td><input type="text" value="489.62" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli MOHELA Private</td><td>$104,419.20</td><td><input type="text" value="831.41" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Pauli MOHELA Fed</td><td>$368,987.00</td><td><input type="text" value="275.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Monthly</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Land</td><td>$671,724.49</td><td><input type="text" value="5426.00" onchange="calculateAllSums()"></td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td>Aug 5th</td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Debt Balances</td><td id="totalDebtBalance">$1,452,989.82</td><td id="totalDebtPayments">$9,117.03</td><td id="totalDebtPaid">$0.00</td><td></td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Debt Payments: <span id="debtSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('debtTable', ['New Debt', '$0.00', '0.00', '0.00', 'Monthly'])">+ Add Debt Item</button>
+
+<div class="category-header">
+    <h3>Savings & Giving</h3>
+</div>
+<table id="savingsTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable('savingsTable', 0)">Category</th>
+            <th onclick="sortTable('savingsTable', 1)">Planned Amount</th>
+            <th>Select</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Emergency Fund</td><td><input type="text" value="0.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Tithe Week 1</td><td><input type="text" value="1760.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr><td>Tithe Week 2</td><td><input type="text" value="1760.00" onchange="calculateAllSums()"></td><td><input type="checkbox" onchange="calculateAllSums()"></td><td></td></tr>
+        <tr class="total"><td>Total Savings</td><td id="totalSavings">$3,520.00</td><td></td><td></td></tr>
+    </tbody>
+</table>
+<div class="selected-total">Total Selected Savings: <span id="savingsSum">$0.00</span></div>
+<button class="add-btn" onclick="addRow('savingsTable', ['New Savings/Giving', '0.00'])">+ Add Savings Item</button>
+
+<div class="summary">
+    <h3>Monthly Budget Summary</h3>
+    <table style="width: 100%; margin: 0;">
+        <tr>
+            <td><strong>Total Monthly Income (Planned):</strong></td>
+            <td id="summaryIncome" class="positive">$26,000.00</td>
+        </tr>
+        <tr>
+            <td><strong>Total Monthly Expenses:</strong></td>
+            <td id="summaryExpenses" class="negative">$16,152.03</td>
+        </tr>
+        <tr style="border-top: 2px solid #333;">
+            <td><strong>Net Monthly Cash Flow:</strong></td>
+            <td id="summaryNetFlow" class="positive">$9,847.97</td>
+        </tr>
+        <tr style="border-top: 1px solid #ccc; margin-top: 10px;">
+            <td><strong>Selected Items Total:</strong></td>
+            <td id="summarySelected">$0.00</td>
+        </tr>
+    </table>
+    <div style="margin-top: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px;">
+        <strong>Impact Analysis:</strong>
+        <div id="impactAnalysis" style="margin-top: 5px;">
+            Select items to see their impact on your budget.
+        </div>
+    </div>
+</div>
+
+<script>
+    function addRow(tableId, defaultValues) {
+        const table = document.getElementById(tableId);
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const totalRow = tbody.lastElementChild;
+        
+        const newRow = document.createElement('tr');
+        
+        defaultValues.forEach((value, index) => {
+            const cell = document.createElement('td');
+            if (index === 0) {
+                cell.innerHTML = '<input type="text" value="' + value + '" style="background: none; border: none; text-align: center; width: 100%;" onchange="calculateAllSums()">';
+            } else if (value.includes(') || (!isNaN(parseFloat(value)) && isFinite(value))) {
+                cell.innerHTML = '<input type="text" value="' + value + '" onchange="calculateAllSums()">';
+            } else {
+                cell.textContent = value;
+            }
+            newRow.appendChild(cell);
+        });
+        
+        const checkboxCell = document.createElement('td');
+        checkboxCell.innerHTML = '<input type="checkbox" onchange="calculateAllSums()">';
+        newRow.appendChild(checkboxCell);
+        
+        const deleteCell = document.createElement('td');
+        deleteCell.innerHTML = '<button class="delete-btn" onclick="deleteRow(this)">×</button>';
+        newRow.appendChild(deleteCell);
+        
+        tbody.insertBefore(newRow, totalRow);
+        calculateAllSums();
+    }
+
+    function deleteRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+        calculateAllSums();
+    }
+
+    function formatCurrency(num) {
+        return ' + num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '<div class="category-header">
+    <h3>Savings & Giving</h,');
+    }
+
+    function parseCurrency(str) {
+        return parseFloat(str.replace(/[$,]/g, '')) || 0;
+    }
+
+    function calculateTableTotal(tableId, columnIndex) {
+        const table = document.getElementById(tableId);
+        const rows = table.getElementsByTagName('tr');
+        let total = 0;
+        
+        for (let i = 1; i < rows.length - 1; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length > columnIndex) {
+                const input = cells[columnIndex].getElementsByTagName('input')[0];
+                if (input) {
+                    total += parseCurrency(input.value);
+                }
+            }
+        }
+        return total;
+    }
+
+    function calculateSelectedSum(tableId, columnIndex) {
+        const table = document.getElementById(tableId);
+        const rows = table.getElementsByTagName('tr');
+        let total = 0;
+        
+        for (let i = 1; i < rows.length - 1; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length > columnIndex) {
+                const inputs = rows[i].getElementsByTagName('input');
+                const checkboxInput = inputs[inputs.length - 2]; // Second to last input should be checkbox
+                
+                if (checkboxInput && checkboxInput.type === 'checkbox' && checkboxInput.checked) {
+                    const amountInput = cells[columnIndex].getElementsByTagName('input')[0];
+                    if (amountInput) {
+                        total += parseCurrency(amountInput.value);
+                    }
+                }
+            }
+        }
+        return total;
+    }
+
+    function calculateAllSums() {
+        const incomeTotal = calculateTableTotal('incomeTable', 1);
+        const housingTotal = calculateTableTotal('housingTable', 1);
+        const insuranceTotal = calculateTableTotal('insuranceTable', 1);
+        const foodTotal = calculateTableTotal('foodTable', 1);
+        const transportationTotal = calculateTableTotal('transportationTable', 1);
+        const lifestyleTotal = calculateTableTotal('lifestyleTable', 1);
+        const debtTotal = calculateTableTotal('debtTable', 2);
+        const savingsTotal = calculateTableTotal('savingsTable', 1);
+
+        document.getElementById('totalIncome').textContent = formatCurrency(incomeTotal);
+        document.getElementById('totalHousing').textContent = formatCurrency(housingTotal);
+        document.getElementById('totalInsurance').textContent = formatCurrency(insuranceTotal);
+        document.getElementById('totalFood').textContent = formatCurrency(foodTotal);
+        document.getElementById('totalTransportation').textContent = formatCurrency(transportationTotal);
+        document.getElementById('totalLifestyle').textContent = formatCurrency(lifestyleTotal);
+        document.getElementById('totalDebtPayments').textContent = formatCurrency(debtTotal);
+        document.getElementById('totalSavings').textContent = formatCurrency(savingsTotal);
+
+        const incomeSelected = calculateSelectedSum('incomeTable', 1);
+        const housingSelected = calculateSelectedSum('housingTable', 1);
+        const insuranceSelected = calculateSelectedSum('insuranceTable', 1);
+        const foodSelected = calculateSelectedSum('foodTable', 1);
+        const transportationSelected = calculateSelectedSum('transportationTable', 1);
+        const lifestyleSelected = calculateSelectedSum('lifestyleTable', 1);
+        const debtSelected = calculateSelectedSum('debtTable', 2);
+        const savingsSelected = calculateSelectedSum('savingsTable', 1);
+
+        document.getElementById('incomeSum').textContent = formatCurrency(incomeSelected);
+        document.getElementById('housingSum').textContent = formatCurrency(housingSelected);
+        document.getElementById('insuranceSum').textContent = formatCurrency(insuranceSelected);
+        document.getElementById('foodSum').textContent = formatCurrency(foodSelected);
+        document.getElementById('transportationSum').textContent = formatCurrency(transportationSelected);
+        document.getElementById('lifestyleSum').textContent = formatCurrency(lifestyleSelected);
+        document.getElementById('debtSum').textContent = formatCurrency(debtSelected);
+        document.getElementById('savingsSum').textContent = formatCurrency(savingsSelected);
+
+        const totalExpenses = housingTotal + insuranceTotal + foodTotal + transportationTotal + lifestyleTotal + debtTotal + savingsTotal;
+        const netFlow = incomeTotal - totalExpenses;
+        const totalSelected = incomeSelected + housingSelected + insuranceSelected + foodSelected + transportationSelected + lifestyleSelected + debtSelected + savingsSelected;
+
+        document.getElementById('summaryIncome').textContent = formatCurrency(incomeTotal);
+        document.getElementById('summaryExpenses').textContent = formatCurrency(totalExpenses);
+        document.getElementById('summaryNetFlow').textContent = formatCurrency(netFlow);
+        document.getElementById('summarySelected').textContent = formatCurrency(totalSelected);
+
+        const netFlowElement = document.getElementById('summaryNetFlow');
+        
+        if (netFlow >= 0) {
+            netFlowElement.className = 'positive';
+        } else {
+            netFlowElement.className = 'negative';
+        }
+
+        const selectedExpenses = housingSelected + insuranceSelected + foodSelected + transportationSelected + lifestyleSelected + debtSelected + savingsSelected;
+        const impactAnalysis = document.getElementById('impactAnalysis');
+        
+        if (incomeSelected > 0 || selectedExpenses > 0) {
+            const netWithSelected = incomeSelected - selectedExpenses;
+            const remainingIncome = incomeTotal - selectedExpenses;
+            
+            if (selectedExpenses > 0) {
+                if (incomeSelected >= selectedExpenses) {
+                    impactAnalysis.innerHTML = 'Selected items: Income ' + formatCurrency(incomeSelected) + ' - Expenses ' + formatCurrency(selectedExpenses) + ' = <span class="positive">Net +' + formatCurrency(netWithSelected) + '</span>. These selected expenses are covered by selected income.';
+                } else if (remainingIncome >= 0) {
+                    impactAnalysis.innerHTML = 'Selected expenses: ' + formatCurrency(selectedExpenses) + '. With total income of ' + formatCurrency(incomeTotal) + ', you would have <span class="positive">' + formatCurrency(remainingIncome) + ' remaining</span> after these expenses.';
+                } else {
+                    impactAnalysis.innerHTML = '⚠️ Selected expenses (' + formatCurrency(selectedExpenses) + ') exceed total income (' + formatCurrency(incomeTotal) + ') by <span class="negative">' + formatCurrency(Math.abs(remainingIncome)) + '</span>. Consider reducing expenses or increasing income.';
+                }
+            } else {
+                impactAnalysis.innerHTML = 'Selected income: <span class="positive">' + formatCurrency(incomeSelected) + '</span>. This would contribute positively to your budget.';
+            }
+        } else {
+            impactAnalysis.textContent = 'Select items to see their impact on your budget.';
+        }
+    }
+
+    function filterTable() {
+        const input = document.getElementById("filterInput");
+        const filter = input.value.toLowerCase();
+        
+        const tableIds = ['incomeTable', 'housingTable', 'insuranceTable', 'foodTable', 'transportationTable', 'lifestyleTable', 'debtTable', 'savingsTable'];
+        
+        tableIds.forEach(tableId => {
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+            
+            for (let i = 1; i < rows.length - 1; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                let match = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(filter)) {
+                        match = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = match ? "" : "none";
+            }
+        });
+    }
+
+    function sortTable(tableId, columnIndex) {
+        const table = document.getElementById(tableId);
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rows = Array.from(tbody.getElementsByTagName('tr'));
+        const totalRow = rows.pop();
+        
+        const isNumeric = (str) => {
+            return !isNaN(parseCurrency(str));
+        };
+        
+        rows.sort((a, b) => {
+            let aValue = a.getElementsByTagName('td')[columnIndex].textContent;
+            let bValue = b.getElementsByTagName('td')[columnIndex].textContent;
+            
+            const aInput = a.getElementsByTagName('td')[columnIndex].getElementsByTagName('input')[0];
+            const bInput = b.getElementsByTagName('td')[columnIndex].getElementsByTagName('input')[0];
+            
+            if (aInput) aValue = aInput.value;
+            if (bInput) bValue = bInput.value;
+            
+            if (isNumeric(aValue) && isNumeric(bValue)) {
+                return parseCurrency(aValue) - parseCurrency(bValue);
+            } else {
+                return aValue.localeCompare(bValue);
+            }
+        });
+        
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+        tbody.appendChild(totalRow);
+    }
+
+    window.onload = function() {
+        calculateAllSums();
+    };
+</script>
+
+</body>
+</html>
