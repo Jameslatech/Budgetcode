@@ -10,7 +10,6 @@
             margin: 20px;
             background-color: #f9f9f9;
         }
-        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -18,23 +17,19 @@
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: center;
         }
-        
         th {
             background-color: #f2f2f2;
             cursor: pointer;
             font-weight: bold;
         }
-        
         th:hover {
             background-color: #e8e8e8;
         }
-        
         input[type="text"] {
             width: 80%;
             box-sizing: border-box;
@@ -42,17 +37,14 @@
             border: 1px solid #ccc;
             border-radius: 3px;
         }
-        
         input[type="checkbox"] {
             margin-right: 10px;
             transform: scale(1.2);
         }
-        
         .total {
             font-weight: bold;
             background-color: #f8f8f8;
         }
-        
         .selected-total {
             background-color: #e8f4fd;
             padding: 10px;
@@ -60,7 +52,6 @@
             border-radius: 5px;
             font-weight: bold;
         }
-        
         .summary {
             background-color: #fff;
             border: 2px solid #4CAF50;
@@ -69,27 +60,22 @@
             margin: 30px 0;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        
         .summary h3 {
             color: #4CAF50;
             margin-top: 0;
         }
-        
         .positive {
             color: #4CAF50;
             font-weight: bold;
         }
-        
         .negative {
             color: #f44336;
             font-weight: bold;
         }
-        
         .warning {
             color: #ff9800;
             font-weight: bold;
         }
-        
         #filterInput {
             width: 100%;
             padding: 10px;
@@ -98,7 +84,6 @@
             border-radius: 5px;
             font-size: 16px;
         }
-        
         .category-header {
             background-color: #4CAF50;
             color: white;
@@ -106,7 +91,6 @@
             margin: 20px 0 10px 0;
             border-radius: 5px;
         }
-        
         .add-btn {
             margin: 10px 0;
             padding: 8px 16px;
@@ -116,11 +100,9 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        
         .add-btn:hover {
             background-color: #45a049;
         }
-        
         .delete-btn {
             background-color: #f44336;
             color: white;
@@ -130,7 +112,6 @@
             cursor: pointer;
             font-size: 12px;
         }
-        
         .delete-btn:hover {
             background-color: #d32f2f;
         }
@@ -369,29 +350,67 @@
         const table = document.getElementById(tableId);
         const tbody = table.getElementsByTagName('tbody')[0];
         const totalRow = tbody.lastElementChild;
-        
         const newRow = document.createElement('tr');
-        
-        defaultValues.forEach((value, index) => {
+        let structure = [];
+
+        switch (tableId) {
+            case 'incomeTable':
+                structure = [
+                    {type: 'text', value: defaultValues[0]},
+                    {type: 'input', value: defaultValues[1]},
+                    {type: 'input', value: defaultValues[2]},
+                    {type: 'checkbox'},
+                    {type: 'delete'}
+                ];
+                break;
+            case 'housingTable':
+            case 'insuranceTable':
+                structure = [
+                    {type: 'text', value: defaultValues[0]},
+                    {type: 'input', value: defaultValues[1]},
+                    {type: 'text', value: defaultValues[2]},
+                    {type: 'checkbox'},
+                    {type: 'delete'}
+                ];
+                break;
+            case 'foodTable':
+            case 'transportationTable':
+            case 'lifestyleTable':
+            case 'savingsTable':
+                structure = [
+                    {type: 'text', value: defaultValues[0]},
+                    {type: 'input', value: defaultValues[1]},
+                    {type: 'checkbox'},
+                    {type: 'delete'}
+                ];
+                break;
+            case 'debtTable':
+                structure = [
+                    {type: 'text', value: defaultValues[0]},
+                    {type: 'text', value: defaultValues[1]},
+                    {type: 'input', value: defaultValues[2]},
+                    {type: 'input', value: defaultValues[3]},
+                    {type: 'text', value: defaultValues[4]},
+                    {type: 'checkbox'},
+                    {type: 'delete'}
+                ];
+                break;
+        }
+
+        structure.forEach(col => {
             const cell = document.createElement('td');
-            if (index === 0) {
-                cell.innerHTML = '<input type="text" value="' + value + '" style="background: none; border: none; text-align: center; width: 100%;" onchange="calculateAllSums()">';
-            } else if (value.includes(') || (!isNaN(parseFloat(value)) && isFinite(value))) {
-                cell.innerHTML = '<input type="text" value="' + value + '" onchange="calculateAllSums()">';
+            if (col.type === 'input') {
+                cell.innerHTML = '<input type="text" value="' + col.value + '" onchange="calculateAllSums()">';
+            } else if (col.type === 'checkbox') {
+                cell.innerHTML = '<input type="checkbox" onchange="calculateAllSums()">';
+            } else if (col.type === 'delete') {
+                cell.innerHTML = '<button class="delete-btn" onclick="deleteRow(this)">×</button>';
             } else {
-                cell.textContent = value;
+                cell.textContent = col.value;
             }
             newRow.appendChild(cell);
         });
-        
-        const checkboxCell = document.createElement('td');
-        checkboxCell.innerHTML = '<input type="checkbox" onchange="calculateAllSums()">';
-        newRow.appendChild(checkboxCell);
-        
-        const deleteCell = document.createElement('td');
-        deleteCell.innerHTML = '<button class="delete-btn" onclick="deleteRow(this)">×</button>';
-        newRow.appendChild(deleteCell);
-        
+
         tbody.insertBefore(newRow, totalRow);
         calculateAllSums();
     }
@@ -403,8 +422,7 @@
     }
 
     function formatCurrency(num) {
-        return ' + num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '<div class="category-header">
-    <h3>Savings & Giving</h,');
+        return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function parseCurrency(str) {
@@ -415,7 +433,6 @@
         const table = document.getElementById(tableId);
         const rows = table.getElementsByTagName('tr');
         let total = 0;
-        
         for (let i = 1; i < rows.length - 1; i++) {
             const cells = rows[i].getElementsByTagName('td');
             if (cells.length > columnIndex) {
@@ -432,18 +449,20 @@
         const table = document.getElementById(tableId);
         const rows = table.getElementsByTagName('tr');
         let total = 0;
-        
         for (let i = 1; i < rows.length - 1; i++) {
             const cells = rows[i].getElementsByTagName('td');
-            if (cells.length > columnIndex) {
-                const inputs = rows[i].getElementsByTagName('input');
-                const checkboxInput = inputs[inputs.length - 2]; // Second to last input should be checkbox
-                
-                if (checkboxInput && checkboxInput.type === 'checkbox' && checkboxInput.checked) {
-                    const amountInput = cells[columnIndex].getElementsByTagName('input')[0];
-                    if (amountInput) {
-                        total += parseCurrency(amountInput.value);
-                    }
+            let checkboxInput = null;
+            for (let j = 0; j < cells.length; j++) {
+                const input = cells[j].querySelector('input[type="checkbox"]');
+                if (input) {
+                    checkboxInput = input;
+                    break;
+                }
+            }
+            if (checkboxInput && checkboxInput.checked) {
+                const amountInput = cells[columnIndex].getElementsByTagName('input')[0];
+                if (amountInput) {
+                    total += parseCurrency(amountInput.value);
                 }
             }
         }
@@ -452,21 +471,25 @@
 
     function calculateAllSums() {
         const incomeTotal = calculateTableTotal('incomeTable', 1);
+        const incomeReceived = calculateTableTotal('incomeTable', 2);
         const housingTotal = calculateTableTotal('housingTable', 1);
         const insuranceTotal = calculateTableTotal('insuranceTable', 1);
         const foodTotal = calculateTableTotal('foodTable', 1);
         const transportationTotal = calculateTableTotal('transportationTable', 1);
         const lifestyleTotal = calculateTableTotal('lifestyleTable', 1);
         const debtTotal = calculateTableTotal('debtTable', 2);
+        const debtPaid = calculateTableTotal('debtTable', 3);
         const savingsTotal = calculateTableTotal('savingsTable', 1);
 
         document.getElementById('totalIncome').textContent = formatCurrency(incomeTotal);
+        document.getElementById('totalIncomeReceived').textContent = formatCurrency(incomeReceived);
         document.getElementById('totalHousing').textContent = formatCurrency(housingTotal);
         document.getElementById('totalInsurance').textContent = formatCurrency(insuranceTotal);
         document.getElementById('totalFood').textContent = formatCurrency(foodTotal);
         document.getElementById('totalTransportation').textContent = formatCurrency(transportationTotal);
         document.getElementById('totalLifestyle').textContent = formatCurrency(lifestyleTotal);
         document.getElementById('totalDebtPayments').textContent = formatCurrency(debtTotal);
+        document.getElementById('totalDebtPaid').textContent = formatCurrency(debtPaid);
         document.getElementById('totalSavings').textContent = formatCurrency(savingsTotal);
 
         const incomeSelected = calculateSelectedSum('incomeTable', 1);
@@ -497,20 +520,13 @@
         document.getElementById('summarySelected').textContent = formatCurrency(totalSelected);
 
         const netFlowElement = document.getElementById('summaryNetFlow');
-        
-        if (netFlow >= 0) {
-            netFlowElement.className = 'positive';
-        } else {
-            netFlowElement.className = 'negative';
-        }
+        netFlowElement.className = netFlow >= 0 ? 'positive' : 'negative';
 
         const selectedExpenses = housingSelected + insuranceSelected + foodSelected + transportationSelected + lifestyleSelected + debtSelected + savingsSelected;
         const impactAnalysis = document.getElementById('impactAnalysis');
-        
         if (incomeSelected > 0 || selectedExpenses > 0) {
             const netWithSelected = incomeSelected - selectedExpenses;
             const remainingIncome = incomeTotal - selectedExpenses;
-            
             if (selectedExpenses > 0) {
                 if (incomeSelected >= selectedExpenses) {
                     impactAnalysis.innerHTML = 'Selected items: Income ' + formatCurrency(incomeSelected) + ' - Expenses ' + formatCurrency(selectedExpenses) + ' = <span class="positive">Net +' + formatCurrency(netWithSelected) + '</span>. These selected expenses are covered by selected income.';
@@ -530,17 +546,13 @@
     function filterTable() {
         const input = document.getElementById("filterInput");
         const filter = input.value.toLowerCase();
-        
         const tableIds = ['incomeTable', 'housingTable', 'insuranceTable', 'foodTable', 'transportationTable', 'lifestyleTable', 'debtTable', 'savingsTable'];
-        
         tableIds.forEach(tableId => {
             const table = document.getElementById(tableId);
             const rows = table.getElementsByTagName("tr");
-            
             for (let i = 1; i < rows.length - 1; i++) {
                 const cells = rows[i].getElementsByTagName("td");
                 let match = false;
-                
                 for (let j = 0; j < cells.length; j++) {
                     if (cells[j].textContent.toLowerCase().includes(filter)) {
                         match = true;
@@ -557,28 +569,22 @@
         const tbody = table.getElementsByTagName('tbody')[0];
         const rows = Array.from(tbody.getElementsByTagName('tr'));
         const totalRow = rows.pop();
-        
         const isNumeric = (str) => {
             return !isNaN(parseCurrency(str));
         };
-        
         rows.sort((a, b) => {
             let aValue = a.getElementsByTagName('td')[columnIndex].textContent;
             let bValue = b.getElementsByTagName('td')[columnIndex].textContent;
-            
             const aInput = a.getElementsByTagName('td')[columnIndex].getElementsByTagName('input')[0];
             const bInput = b.getElementsByTagName('td')[columnIndex].getElementsByTagName('input')[0];
-            
             if (aInput) aValue = aInput.value;
             if (bInput) bValue = bInput.value;
-            
             if (isNumeric(aValue) && isNumeric(bValue)) {
                 return parseCurrency(aValue) - parseCurrency(bValue);
             } else {
                 return aValue.localeCompare(bValue);
             }
         });
-        
         tbody.innerHTML = '';
         rows.forEach(row => tbody.appendChild(row));
         tbody.appendChild(totalRow);
