@@ -213,6 +213,8 @@
     }
     .schedule-table-container {
       overflow-x: auto;
+      overflow-y: auto;
+      max-height: 400px;
       margin-top: 12px;
       border-radius: 8px;
       background: #f7fafc;
@@ -344,7 +346,7 @@
   </div>
   <script>
     // Replace with your actual Apps Script URL
-    const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxtidN3tn0DDJ74iQUq7hV3foWFVt2U1-yZa4HtVHJ039RUNlJPAyPB9f-ooxtlGa8o/exec";
+    const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyHf3SnwRelficVi57sGZy_mFI9oUabiq28JYnqJ20MppVdTBMHPhKB3geYJFeVkS1p/exec";
     const statusDiv = document.getElementById('status');
     const addForm = document.getElementById('addForm');
     const calculatorModal = document.getElementById('calculatorModal');
@@ -592,7 +594,7 @@
       let payoffDate = new Date(start.setMonth(start.getMonth() + months));
       let html = `<b>Full payoff in ${months} months (${payoffDate.toLocaleDateString()})</b><br>`;
       html += `<b>Total Paid:</b> $${totalPaid.toFixed(2)}<br>`;
-      // Render the monthly schedule as a table
+      // Render the monthly schedule as a scrollable table
       html += `<details><summary>Monthly Schedule (click to expand)</summary>`;
       html += `<div class="schedule-table-container"><table class="schedule-table">
         <thead>
