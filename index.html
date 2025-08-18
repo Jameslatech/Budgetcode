@@ -211,6 +211,36 @@
       margin-bottom: 6px;
       font-weight: 500;
     }
+    .schedule-table-container {
+      overflow-x: auto;
+      margin-top: 12px;
+      border-radius: 8px;
+      background: #f7fafc;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(60,98,206,.05);
+      padding: 10px;
+    }
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .96rem;
+      background: #fff;
+    }
+    .schedule-table th {
+      background: #f3f4f8;
+      color: #222;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 7px 5px;
+      text-align: left;
+    }
+    .schedule-table td {
+      padding: 6px 5px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .schedule-table tr:nth-child(even) td {
+      background: #f7fbff;
+    }
     @media (max-width: 700px) {
       .container {
         margin: 12px auto;
@@ -229,6 +259,9 @@
       }
       .calculator-content {
         padding: 1.2em .5em;
+      }
+      .schedule-table th, .schedule-table td {
+        font-size: .92rem;
       }
     }
   </style>
@@ -522,6 +555,7 @@
       debts = debts.slice().sort((a,b) => b.rate - a.rate);
       return calculateDebtPayoff(debts, extra, "Avalanche");
     }
+
     // Improved debt payoff logic with a neat schedule table
     function calculateDebtPayoff(debts, extra, method) {
       let months = 0, schedule = [];
@@ -529,13 +563,17 @@
       let debtsCopy = debts.map(d => ({...d}));
       let done = false;
       let start = new Date();
+      let debtNames = debtsCopy.map(d => d.name);
       while (!done && months < 600) { // Prevent infinite loop
         months++;
         let paymentPool = extra;
-        let monthSummary = [];
+        let balances = [];
         for (let i = 0; i < debtsCopy.length; i++) {
           let d = debtsCopy[i];
-          if (d.balance <= 0) continue;
+          if (d.balance <= 0) {
+            balances.push(0);
+            continue;
+          }
           let interest = d.balance * (d.rate/100/12);
           let payAmt = Math.min(d.payment + paymentPool, d.balance + interest);
           d.balance += interest;
@@ -546,33 +584,30 @@
           if (d.balance === 0 && paymentPool > 0 && i < debtsCopy.length-1) {
             debtsCopy[i+1].payment += d.payment;
           }
-          monthSummary.push({name: d.name, balance: d.balance});
+          balances.push(d.balance);
         }
         done = debtsCopy.every(d => d.balance <= 0);
-        schedule.push(monthSummary);
+        schedule.push(balances);
       }
       let payoffDate = new Date(start.setMonth(start.getMonth() + months));
       let html = `<b>Full payoff in ${months} months (${payoffDate.toLocaleDateString()})</b><br>`;
       html += `<b>Total Paid:</b> $${totalPaid.toFixed(2)}<br>`;
       // Render the monthly schedule as a table
       html += `<details><summary>Monthly Schedule (click to expand)</summary>`;
-      html += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;margin-top:10px">
+      html += `<div class="schedule-table-container"><table class="schedule-table">
         <thead>
-          <tr style="background:#e3e8f0;">
-            <th>Month</th>
-            <th>Debt Name</th>
-            <th>Remaining Balance</th>
-          </tr>
-        </thead>
-        <tbody>`;
+          <tr>
+            <th>Month</th>`;
+      for(let name of debtNames) {
+        html += `<th>${name}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
       for(let m = 0; m < schedule.length; m++) {
-        for(let d of schedule[m]) {
-          html += `<tr>
-            <td>${m+1}</td>
-            <td>${d.name}</td>
-            <td>$${d.balance.toFixed(2)}</td>
-          </tr>`;
+        html += `<tr><td>${m+1}</td>`;
+        for(let b of schedule[m]) {
+          html += `<td>$${b.toFixed(2)}</td>`;
         }
+        html += `</tr>`;
       }
       html += `</tbody></table></div></details>`;
       return html;
