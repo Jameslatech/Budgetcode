@@ -91,6 +91,22 @@
     .error {
       color: #dc2626;
     }
+    .budget-section-group {
+      margin-bottom: 36px;
+      border-radius: 11px;
+      box-shadow: 0 2px 12px rgba(60,98,206,.07);
+      background: #f7fbff;
+      padding-bottom: 8px;
+      overflow: hidden;
+    }
+    .section-header-row {
+      background: linear-gradient(90deg, #dbeafe 70%, #f1f5f9 100%);
+      color: #2563eb;
+      font-weight: bold;
+      font-size: 1.17rem;
+      letter-spacing: 1.5px;
+      border-bottom: 2px solid #2563eb;
+    }
     table {
       width: 100%;
       border-collapse: separate;
@@ -98,7 +114,8 @@
       background: #fff;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(60,98,206,.04);
+      box-shadow: none;
+      margin-bottom: 0;
     }
     th, td {
       padding: 11px 9px;
@@ -272,13 +289,6 @@
             <label for="dueDate">Due Date</label>
             <input name="Due Date" id="dueDate" type="text">
           </div>
-          <div class="form-group">
-            <label for="select">Select</label>
-            <select name="Select" id="select">
-              <option value="FALSE">No</option>
-              <option value="TRUE">Yes</option>
-            </select>
-          </div>
         </div>
         <button type="submit">Add Row</button>
       </form>
@@ -289,9 +299,7 @@
       <button type="button" onclick="showCalculator('snowball')">Snowball Payoff</button>
       <button type="button" onclick="showCalculator('avalanche')">Avalanche Payoff</button>
     </div>
-    <div class="card">
-      <table id="budgetTable"></table>
-    </div>
+    <div id="budgetSections"></div>
   </div>
   <!-- Calculator Modal -->
   <div id="calculatorModal" class="calculator-modal">
@@ -305,12 +313,12 @@
     // Replace with your actual Apps Script URL
     const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxtidN3tn0DDJ74iQUq7hV3foWFVt2U1-yZa4HtVHJ039RUNlJPAyPB9f-ooxtlGa8o/exec";
     const statusDiv = document.getElementById('status');
-    const table = document.getElementById('budgetTable');
     const addForm = document.getElementById('addForm');
     const calculatorModal = document.getElementById('calculatorModal');
     const calculatorTitle = document.getElementById('calculatorTitle');
     const calculatorResults = document.getElementById('calculatorResults');
     const extraPaymentInput = document.getElementById('extraPaymentInput');
+    const budgetSectionsDiv = document.getElementById('budgetSections');
     let sheetData = [];
     let headers = [];
 
@@ -327,7 +335,7 @@
         .then(data => {
           sheetData = data;
           headers = data[0];
-          renderTable(data);
+          renderBudgetSections(data);
           setStatus('');
         })
         .catch(e => {
@@ -335,29 +343,54 @@
         });
     }
 
-    // Render table from sheet data
-    function renderTable(data) {
-      if (!data || !data.length) {
-        table.innerHTML = '<tr><td>No data available.</td></tr>';
+    // Render budget sections grouped and separated
+    function renderBudgetSections(data) {
+      if (!data || data.length < 2) {
+        budgetSectionsDiv.innerHTML = '<div class="card">No data available.</div>';
         return;
       }
-      let html = '<thead><tr>' + data[0].map(h => `<th>${h}</th>`).join('') + '<th>Delete</th></tr></thead><tbody>';
+      // Group rows by Section
+      const sectionOrder = [
+        "Income", "Housing", "Insurance", "Food",
+        "Transportation", "Lifestyle", "Debt", "Savings"
+      ];
+      const groups = {};
+      for (const section of sectionOrder) groups[section] = [];
       for (let i = 1; i < data.length; i++) {
-        html += '<tr>';
-        for (let j = 0; j < data[i].length; j++) {
-          // First column not editable (Section)
-          if (j === 0) {
-            html += `<td>${data[i][j]}</td>`;
-          } else {
-            html += `<td contenteditable="true" data-row="${i}" data-col="${j}" title="Click to edit">${data[i][j]}</td>`;
-          }
+        const row = data[i];
+        if(groups.hasOwnProperty(row[0])) {
+          groups[row[0]].push({row, index: i});
         }
-        html += `<td><button class="delete-btn" onclick="deleteRow(${i})">Delete</button></td></tr>`;
       }
-      html += '</tbody>';
-      table.innerHTML = html;
+      // Build HTML for sections
+      let html = '';
+      for (const section of sectionOrder) {
+        if (groups[section].length === 0) continue;
+        html += `<div class="budget-section-group">
+          <table>
+            <tr class="section-header-row">
+              <td colspan="${headers.length+1}">${section}</td>
+            </tr>
+            <tr>` +
+              headers.map(h => `<th>${h}</th>`).join('') +
+              `<th>Delete</th></tr>`;
+        for (const {row, index} of groups[section]) {
+          html += '<tr>';
+          for (let j = 0; j < row.length; j++) {
+            // First column not editable (Section)
+            if (j === 0) {
+              html += `<td>${row[j]}</td>`;
+            } else {
+              html += `<td contenteditable="true" data-row="${index}" data-col="${j}" title="Click to edit">${row[j]}</td>`;
+            }
+          }
+          html += `<td><button class="delete-btn" onclick="deleteRow(${index})">Delete</button></td></tr>`;
+        }
+        html += '</table></div>';
+      }
+      budgetSectionsDiv.innerHTML = html;
       // Add event listeners for inline editing
-      Array.from(table.querySelectorAll('td[contenteditable="true"]')).forEach(cell => {
+      Array.from(budgetSectionsDiv.querySelectorAll('td[contenteditable="true"]')).forEach(cell => {
         cell.addEventListener('blur', function() {
           let row = parseInt(cell.getAttribute('data-row'));
           let col = parseInt(cell.getAttribute('data-col'));
@@ -381,8 +414,7 @@
         formData.get('Received Amount') || '',
         formData.get('Monthly Payment') || '',
         formData.get('Paid So Far') || '',
-        formData.get('Due Date') || '',
-        formData.get('Select') || ''
+        formData.get('Due Date') || ''
       ];
       setStatus('Adding row...');
       fetch(SHEETS_URL, {
